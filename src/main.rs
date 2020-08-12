@@ -22,7 +22,7 @@ fn main() {
     App::build()
         .add_resource(Msaa { samples: 4 })
         .add_default_plugins()
-        .add_resource(ClearColor(Color::rgb(0.1, 0.1, 0.1)))
+        .add_resource(ClearColor(Color::rgb(0.01, 0.01, 0.01)))
         .add_resource(Simulation(GravTree::new(&bodies, 0.02)))
         .add_startup_system(add_bodies.system())
         .add_system(time_step.system())
