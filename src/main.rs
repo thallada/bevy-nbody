@@ -37,6 +37,7 @@ struct State {
     cursor_position: Option<Vec2>,
     zooming: bool,
     panning: bool,
+    paused: bool,
     follow_body_index: Option<usize>,
 }
 
@@ -142,8 +143,10 @@ fn add_bodies(
     }
 }
 
-fn time_step(mut grav_tree: ResMut<Simulation>) {
-    grav_tree.0 = grav_tree.0.time_step();
+fn time_step(state: Res<State>, mut grav_tree: ResMut<Simulation>) {
+    if !state.paused {
+        grav_tree.0 = grav_tree.0.time_step();
+    }
 }
 
 fn update_bodies(grav_tree: Res<Simulation>, mut body_query: Query<(&Entity, &mut Translation)>) {
@@ -257,7 +260,7 @@ fn keyboard_input(
 ) {
     for event in state.keyboard_event_reader.iter(&keyboard_input_events) {
         if let Some(key_code) = event.key_code {
-            if key_code == KeyCode::R {
+            if key_code == KeyCode::R && event.state == ElementState::Pressed {
                 for (_, scale, mut translation) in &mut query.iter() {
                     if let Some(window) = windows.get_primary() {
                         translation.0.set_x(0.);
@@ -268,6 +271,8 @@ fn keyboard_input(
                         );
                     }
                 }
+            } else if key_code == KeyCode::Space && event.state == ElementState::Pressed {
+                state.paused = !state.paused;
             }
         }
     }

@@ -31,6 +31,7 @@ Options:
 |key | control|
 |----|--------|
 | R | reset the simulation |
+| Space | pause / resume the simulation |
 | Left Click | hold and move mouse to pan the view | 
 | Middle Click | hold and move mouse up and down to zoom in and out |
 | Right Click | click on a body to focus the camera on that body |
