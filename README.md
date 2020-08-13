@@ -3,6 +3,7 @@
 An N-body simulation in Rust using the [bevy](https://bevyengine.org) crate for rendering and [bigbang](https://docs.rs/bigbang/0.0.9/bigbang/) crate for the n-body calculations.
 
 ![screenshot](assets/nbody.png)
+[youtube video](https://youtu.be/7_NheElcuu8)
 
 ## Install
 
