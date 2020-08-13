@@ -1,3 +1,4 @@
+use argh::FromArgs;
 use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, PrintDiagnosticsPlugin},
     input::keyboard::{ElementState, KeyboardInput},
@@ -9,6 +10,21 @@ use bevy::{
 };
 use bigbang::{Entity, GravTree};
 use rand::Rng;
+
+#[derive(FromArgs)]
+#[argh(description = "n-body simulation in bevy using bigbang")]
+struct Options {
+    #[argh(option, default = "100", short = 'n', description = "number of bodies in the simulation")]
+    num_bodies: usize,
+    #[argh(option, default = "0.02", short = 't', description = "granularity of simulation (how much each frame impacts movement)")]
+    time_step: f64,
+    #[argh(option, default = "1280", short = 'w', description = "initial width of spawned window")]
+    width: u32,
+    #[argh(option, default = "720", short = 'h', description = "initial height of spawned window")]
+    height: u32,
+    #[argh(option, default = "10.0", short = 's', description = "initial scale of view (bigger = more zoomed out)")]
+    scale: f32
+}
 
 struct Simulation(GravTree<Entity>);
 
@@ -24,19 +40,14 @@ struct State {
     follow_body_index: Option<usize>,
 }
 
-static INITIAL_WIDTH: u32 = 1280;
-static INITIAL_HEIGHT: u32 = 720;
-static INITIAL_SCALE: f32 = 10.;
-static TIME_STEP: f64 = 0.02;
-static NUM_BODIES: u32 = 100;
-
 fn main() {
+    let options: Options = argh::from_env();
     App::build()
         .add_resource(Msaa { samples: 4 })
         .add_resource(WindowDescriptor {
             title: "bevy-nbody".to_string(),
-            width: INITIAL_WIDTH,
-            height: INITIAL_HEIGHT,
+            width: options.width,
+            height: options.height,
             ..Default::default()
         })
         .add_default_plugins()
@@ -45,9 +56,10 @@ fn main() {
         .init_resource::<State>()
         .add_resource(ClearColor(Color::rgb(0.01, 0.01, 0.01)))
         .add_resource(Simulation(GravTree::new(
-            &initialize_bodies(INITIAL_WIDTH, INITIAL_HEIGHT, INITIAL_SCALE),
-            TIME_STEP,
+            &initialize_bodies(options.num_bodies, options.width, options.height, options.scale),
+            options.time_step,
         )))
+        .add_resource(options)
         .add_startup_system(add_bodies.system())
         .add_system(time_step.system())
         .add_system(update_bodies.system())
@@ -57,10 +69,10 @@ fn main() {
         .run();
 }
 
-fn initialize_bodies(width: u32, height: u32, scale: f32) -> Vec<Entity> {
+fn initialize_bodies(num: usize, width: u32, height: u32, scale: f32) -> Vec<Entity> {
     let mut rng = rand::thread_rng();
     let mut bodies = vec![];
-    for i in 0..NUM_BODIES {
+    for i in 0..num {
         let mass = if i == 0 {
             // big boi
             rng.gen_range(500., 1500.)
@@ -93,11 +105,12 @@ fn add_bodies(
     mut meshes: ResMut<Assets<Mesh>>,
     asset_server: Res<AssetServer>,
     grav_tree: Res<Simulation>,
+    options: Res<Options>,
 ) {
     let mut rng = rand::thread_rng();
     let texture = asset_server.load("assets/circle.png").unwrap();
     commands.spawn(Camera2dComponents {
-        scale: Scale(INITIAL_SCALE),
+        scale: Scale(options.scale),
         ..Camera2dComponents::default()
     });
 
@@ -239,6 +252,7 @@ fn keyboard_input(
     keyboard_input_events: Res<Events<KeyboardInput>>,
     mut grav_tree: ResMut<Simulation>,
     windows: Res<Windows>,
+    options: Res<Options>,
     mut query: Query<(&Camera, &Scale, &mut Translation)>,
 ) {
     for event in state.keyboard_event_reader.iter(&keyboard_input_events) {
@@ -249,8 +263,8 @@ fn keyboard_input(
                         translation.0.set_x(0.);
                         translation.0.set_y(0.);
                         grav_tree.0 = GravTree::new(
-                            &initialize_bodies(window.width, window.height, scale.0),
-                            TIME_STEP,
+                            &initialize_bodies(options.num_bodies, window.width, window.height, scale.0),
+                            options.time_step,
                         );
                     }
                 }
