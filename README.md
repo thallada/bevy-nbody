@@ -5,6 +5,8 @@ An N-body simulation in Rust using the [bevy](https://bevyengine.org) crate for 
 ![screenshot](assets/nbody.png)
 [youtube video](https://youtu.be/7_NheElcuu8)
 
+**Note**: I made this shortly after bevy was initially released so it's a bit out of date now. Also, I haven't really worked with ECS before, so you probably shouldn't use this as an example of how to structure a bevy game.
+
 ## Install
 
 Clone the repo, and run `cargo build --release`. The executable will be under `target/release/`.
